@@ -205,10 +205,14 @@ public sealed class MarkdownView : ContentView
             LineBreakModeText = typography.TextLineBreakMode;
             LineBreakModeHeader = typography.HeadingLineBreakMode;
 
-            // Image settings from theme
-            ImageAspect = Theme.ImageAspect;
-            DefaultImageWidth = Theme.DefaultImageWidth;
-            DefaultImageHeight = Theme.DefaultImageHeight;
+            // Image settings from theme — only apply when the view property
+            // is still at its BindableProperty default (i.e. not explicitly set in XAML/code).
+            if (ImageAspect == (Aspect)ImageAspectProperty.DefaultValue)
+                ImageAspect = Theme.ImageAspect;
+            if (Math.Abs(DefaultImageWidth - (double)DefaultImageWidthProperty.DefaultValue) < 0.01)
+                DefaultImageWidth = Theme.DefaultImageWidth;
+            if (Math.Abs(DefaultImageHeight - (double)DefaultImageHeightProperty.DefaultValue) < 0.01)
+                DefaultImageHeight = Theme.DefaultImageHeight;
         }
         finally
         {
@@ -1331,19 +1335,13 @@ public sealed class MarkdownView : ContentView
                     }
                 }
 
-                if (hasCustomAspect && !hasExplicitSize)
+                if (!hasExplicitSize)
                 {
-                    // Use configurable default sizes when only aspect is specified
-                    // This allows AspectFill and other aspects to work correctly
-                    img.MinimumWidthRequest = DefaultImageWidth;
-                    img.MinimumHeightRequest = DefaultImageHeight;
-                }
-
-                // For inline images without explicit size and without custom horizontal positioning,
-                // let them size naturally at the start
-                if (!hasExplicitSize && !hasCustomHorizontal && !hasCustomAspect)
-                {
-                    img.HorizontalOptions = LayoutOptions.Start;
+                    // Always constrain inline images to DefaultImageWidth/Height.
+                    // On Android, Glide treats WRAP_CONTENT as screen-size when no
+                    // explicit dimensions are provided, causing images to render huge.
+                    img.WidthRequest = DefaultImageWidth;
+                    img.HeightRequest = DefaultImageHeight;
                 }
 
                 // Load the image asynchronously
@@ -2333,6 +2331,18 @@ public sealed class MarkdownView : ContentView
             {
                 byte[] imageBytes = Convert.FromBase64String(imageUrl);
                 imageSource = ImageSource.FromStream(() => new MemoryStream(imageBytes));
+            }
+            // Handle local file paths (absolute paths that exist on disk)
+            else if (File.Exists(imageUrl))
+            {
+                if (_imageCache.TryGetValue(imageUrl, out ImageSource cachedFile))
+                {
+                    return cachedFile;
+                }
+
+                var fileBytes = await File.ReadAllBytesAsync(imageUrl).ConfigureAwait(false);
+                imageSource = ImageSource.FromStream(() => new MemoryStream(fileBytes));
+                _imageCache[imageUrl] = imageSource;
             }
             else if (Uri.TryCreate(imageUrl, UriKind.Absolute, out Uri uriResult))
             {

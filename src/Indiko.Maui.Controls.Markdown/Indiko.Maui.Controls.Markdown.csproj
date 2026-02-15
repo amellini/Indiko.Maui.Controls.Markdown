@@ -35,12 +35,12 @@
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.19041.0</SupportedOSPlatformVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Markdig" Version="0.44.0" />
-    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.20" />
-    <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="10.0.20" />
-    <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.119.1" />
+    <PackageReference Include="Markdig" Version="0.45.0" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.40" />
+    <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="10.0.40" />
+    <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.119.2" />
     <PackageReference Include="CSharpMath.SkiaSharp" Version="0.5.1" />
-    <PackageReference Include="Svg.Skia" Version="3.4.0" />
+    <PackageReference Include="Svg.Skia" Version="3.4.1" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Indiko.Maui.Controls.Markdown\icon.png" Pack="true" PackagePath="" />
