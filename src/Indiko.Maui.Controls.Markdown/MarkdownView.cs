@@ -2340,8 +2340,8 @@ public sealed class MarkdownView : ContentView
                     return cachedFile;
                 }
 
-                var fileBytes = await File.ReadAllBytesAsync(imageUrl).ConfigureAwait(false);
-                imageSource = ImageSource.FromStream(() => new MemoryStream(fileBytes));
+                // Use FromFile to avoid Android HWUI stream decoder issues with Glide
+                imageSource = ImageSource.FromFile(imageUrl);
                 _imageCache[imageUrl] = imageSource;
             }
             else if (Uri.TryCreate(imageUrl, UriKind.Absolute, out Uri uriResult))
@@ -2407,7 +2407,12 @@ public sealed class MarkdownView : ContentView
                                 .ConfigureAwait(false);
                             if (imageBytes != null)
                             {
-                                imageSource = ImageSource.FromStream(() => new MemoryStream(imageBytes));
+                                // Save to temp file to avoid Android HWUI stream decoder issues with Glide
+                                var ext = System.IO.Path.GetExtension(uriResult.LocalPath);
+                                if (string.IsNullOrEmpty(ext) || ext == ".") ext = ".jpg";
+                                var tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"md_img_{Guid.NewGuid():N}{ext}");
+                                await File.WriteAllBytesAsync(tempPath, imageBytes).ConfigureAwait(false);
+                                imageSource = ImageSource.FromFile(tempPath);
                                 if (imageUrl != null) _imageCache[imageUrl] = imageSource;
                             }
                             else
