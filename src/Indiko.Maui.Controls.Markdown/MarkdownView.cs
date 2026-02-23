@@ -1430,6 +1430,17 @@ public sealed class MarkdownView : ContentView
                     {
                         formatted.Spans.Add(new Span { Text = "\n" });
                     }
+                    else if (inline is CodeInline headingCode)
+                    {
+                        formatted.Spans.Add(new Span
+                        {
+                            Text = headingCode.Content.ToString(),
+                            FontSize = GetFontsizeForBlockLevel(block.Level),
+                            FontAttributes = FontAttributes.None,
+                            TextColor = CodeBlockTextColor,
+                            FontFamily = CodeBlockFontFace
+                        });
+                    }
                 }
             }
 
@@ -2287,6 +2298,16 @@ public sealed class MarkdownView : ContentView
                             TextColor = Colors.DarkOliveGreen,
                             FontFamily = TextFontFace,
                             FontSize = TextFontSize
+                        });
+                        break;
+
+                    case CodeInline code:
+                        formatted.Spans.Add(new Span
+                        {
+                            Text = code.Content.ToString(),
+                            FontFamily = CodeBlockFontFace,
+                            FontSize = TextFontSize,
+                            TextColor = CodeBlockTextColor
                         });
                         break;
                 }
