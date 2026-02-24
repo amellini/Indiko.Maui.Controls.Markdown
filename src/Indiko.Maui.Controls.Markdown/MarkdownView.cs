@@ -2223,22 +2223,41 @@ public sealed class MarkdownView : ContentView
                         break;
 
                     case EmphasisInline em:
-                        var text = string.Concat(em.Select(x => (x as LiteralInline)?.Content.ToString()));
-                        formatted.Spans.Add(new Span
+                        var emFontAttributes = em.DelimiterChar == '*' && em.DelimiterCount == 2
+                            ? FontAttributes.Bold
+                            : em.DelimiterChar == '*' && em.DelimiterCount == 1
+                                ? FontAttributes.Italic
+                                : FontAttributes.None;
+                        var emTextDecorations = em.DelimiterChar == '~'
+                            ? TextDecorations.Strikethrough
+                            : TextDecorations.None;
+                        foreach (var emChild in em)
                         {
-                            Text = text,
-                            TextDecorations = em.DelimiterChar == '~'
-                                ? TextDecorations.Strikethrough
-                                : TextDecorations.None,
-                            FontAttributes = em.DelimiterChar == '*' && em.DelimiterCount == 2
-                                ? FontAttributes.Bold
-                                : em.DelimiterChar == '*' && em.DelimiterCount == 1
-                                    ? FontAttributes.Italic
-                                    : FontAttributes.None,
-                            FontFamily = TextFontFace,
-                            FontSize = TextFontSize,
-                            TextColor = TextColor
-                        });
+                            if (emChild is CodeInline emCode)
+                            {
+                                formatted.Spans.Add(new Span
+                                {
+                                    Text = emCode.Content.ToString(),
+                                    TextDecorations = emTextDecorations,
+                                    FontAttributes = emFontAttributes,
+                                    FontFamily = CodeBlockFontFace,
+                                    FontSize = TextFontSize,
+                                    TextColor = CodeBlockTextColor
+                                });
+                            }
+                            else if (emChild is LiteralInline emLiteral)
+                            {
+                                formatted.Spans.Add(new Span
+                                {
+                                    Text = emLiteral.Content.ToString(),
+                                    TextDecorations = emTextDecorations,
+                                    FontAttributes = emFontAttributes,
+                                    FontFamily = TextFontFace,
+                                    FontSize = TextFontSize,
+                                    TextColor = TextColor
+                                });
+                            }
+                        }
                         break;
 
                     case LineBreakInline:
