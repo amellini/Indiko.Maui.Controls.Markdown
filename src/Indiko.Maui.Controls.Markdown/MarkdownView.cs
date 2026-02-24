@@ -1397,6 +1397,8 @@ public sealed class MarkdownView : ContentView
 				{
 					if (sub is LiteralInline l)
 						textBuffer.Append(l.Content.Text.AsSpan(l.Content.Start, l.Content.Length));
+					else if (sub is CodeInline c)
+						textBuffer.Append(c.Content);
 				}
 			}
 			else if (inline is LineBreakInline)
@@ -2248,22 +2250,39 @@ public sealed class MarkdownView : ContentView
 						break;
 
 					case EmphasisInline em:
-						var text = string.Concat(em.Select(x => (x as LiteralInline)?.Content.ToString()));
-						formatted.Spans.Add(new Span
+						var emphasisDecorations = em.DelimiterChar == '~'
+							? TextDecorations.Strikethrough
+							: TextDecorations.None;
+						var emphasisAttributes = em.DelimiterChar == '*' && em.DelimiterCount == 2
+							? FontAttributes.Bold
+							: em.DelimiterChar == '*' && em.DelimiterCount == 1
+								? FontAttributes.Italic
+								: FontAttributes.None;
+						foreach (var child in em)
 						{
-							Text = text,
-							TextDecorations = em.DelimiterChar == '~'
-								? TextDecorations.Strikethrough
-								: TextDecorations.None,
-							FontAttributes = em.DelimiterChar == '*' && em.DelimiterCount == 2
-								? FontAttributes.Bold
-								: em.DelimiterChar == '*' && em.DelimiterCount == 1
-									? FontAttributes.Italic
-									: FontAttributes.None,
-							FontFamily = TextFontFace,
-							FontSize = TextFontSize,
-							TextColor = TextColor
-						});
+							if (child is LiteralInline lit)
+							{
+								formatted.Spans.Add(new Span
+								{
+									Text = lit.Content.ToString(),
+									TextDecorations = emphasisDecorations,
+									FontAttributes = emphasisAttributes,
+									FontFamily = TextFontFace,
+									FontSize = TextFontSize,
+									TextColor = TextColor
+								});
+							}
+							else if (child is CodeInline code)
+							{
+								formatted.Spans.Add(new Span
+								{
+									Text = code.Content.ToString(),
+									FontFamily = CodeBlockFontFace,
+									FontSize = TextFontSize,
+									TextColor = CodeBlockTextColor
+								});
+							}
+						}
 						break;
 
 					case LineBreakInline:
