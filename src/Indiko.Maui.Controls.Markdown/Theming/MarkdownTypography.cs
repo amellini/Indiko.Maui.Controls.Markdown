@@ -46,21 +46,25 @@ public class MarkdownTypography : INotifyPropertyChanged
         set => SetProperty(ref _headingFontFamily, value, nameof(HeadingFontFamily));
     }
 
-    private string _codeFontFamily = "Consolas";
+    private string? _codeFontFamily;
     /// <summary>
     /// Font family for code blocks and inline code.
+    /// Defaults to null so the platform system monospace font is used,
+    /// avoiding missing-asset crashes on Android where "Consolas" is not bundled.
     /// </summary>
-    public string CodeFontFamily
+    public string? CodeFontFamily
     {
         get => _codeFontFamily;
         set => SetProperty(ref _codeFontFamily, value, nameof(CodeFontFamily));
     }
 
-    private string _blockQuoteFontFamily = "Consolas";
+    private string? _blockQuoteFontFamily;
     /// <summary>
     /// Font family for block quotes.
+    /// Defaults to null so the platform system monospace font is used,
+    /// avoiding missing-asset crashes on Android where "Consolas" is not bundled.
     /// </summary>
-    public string BlockQuoteFontFamily
+    public string? BlockQuoteFontFamily
     {
         get => _blockQuoteFontFamily;
         set => SetProperty(ref _blockQuoteFontFamily, value, nameof(BlockQuoteFontFamily));
